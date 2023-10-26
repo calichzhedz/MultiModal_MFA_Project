@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration</title>
+    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Multi-Modal Authentication System</h2>
+        <form action="{{ url_for('register') }}" method="post" enctype="multipart/form-data">
+            <div class="input-group">
+                <label for="username">Username:</label>
+                <input type="text" name="username" required>
+            </div>
+
+            <!-- Voice Recording -->
+            <div class="input-group">
+                <button type="button" id="startRecord" class="record-btn">Start Recording</button>
+                <button type="button" id="stopRecord" class="record-btn">Stop Recording</button>
+                <audio id="audioPlayback" controls></audio>
+                <input type="hidden" name="audioData" id="audioData">
+            </div>
+
+            <div class="input-group">
+                <label>Please type the following passage:</label>
+                <p id="typingPrompt">
+Once upon a time, in a land far, far away, there was a bustling town named Typington. The residents of Typington had a unique culture centered around the art of typing. Every year, they would host a grand tournament, where typists from all corners of the world would come to showcase their speed and accuracy.
+Young and old, everyone in the town practiced diligently, hoping to one day be crowned the Typing Champion. Legends spoke of the mythical "Speedster," a typist so fast that the keys would blaze with fire as they typed. However, it wasn't just about speed; precision was equally revered. A single typo could disqualify even the fastest typist.
+The heart of Typington was its grand library, which housed ancient manuscripts on typing techniques. Novices and masters alike would frequent the library, always in search of knowledge to refine their craft. The town believed that the power of words, when typed with skill and passion, could enchant, inspire, and change the world.
+                </p>
+                <textarea id="typingArea" name="typingData" rows="10" cols="50"></textarea>
+            </div>
+
+            <button type="button" id="checkTyping">Check Typing</button>
+            <div id="feedback" class="feedback"></div>
+
+            <button id="initApp">Enable Microphone</button>
+            <input type="submit" value="Register" class="submit-btn">
+        </form>
+
+        <script>
+            let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            let recorder;
+
+            navigator.mediaDevices.getUserMedia({
+                    audio: true
+                })
+                .then(stream => {
+                    let input = audioContext.createMediaStreamSource(stream);
+                    recorder = new Recorder(input);
+                });
+
+            document.getElementById("startRecord").addEventListener("click", () => {
+                if (recorder) {
+                    recorder.record();
+                }
+            });
+
+            document.getElementById("stopRecord").addEventListener("click", () => {
+                if (recorder) {
+                    recorder.stop();
+                    recorder.exportWAV(uploadAudio);
+                }
+            });
+
+            function uploadAudio(blob) {
+                let audioUrl = URL.createObjectURL(blob);
+                document.getElementById("audioPlayback").src = audioUrl;
+
+                let reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = () => {
+                    let base64data = reader.result;
+                    document.getElementById("audioData").value = base64data;
+                };
+            }
+
+            document.getElementById("initApp").addEventListener("click", function() {
+                navigator.mediaDevices.getUserMedia({
+                        audio: true
+                    })
+                    .then(stream => {
+                        let input = audioContext.createMediaStreamSource(stream);
+                        recorder = new Recorder(input);
+                    });
+                // Hide the button after initialization
+                this.style.display = "none";
+            });
+
+            let startTime;
+            let endTime;
+
+            document.getElementById("typingArea").addEventListener("focus", () => {
+                startTime = new Date().getTime();
+            });
+
+            document.getElementById("typingArea").addEventListener("blur", () => {
+                endTime = new Date().getTime();
+                let typingTimeInSeconds = (endTime - startTime) / 1000;
+                // You can further process this data or attach it to the form for submission
+            });
+
+            document.getElementById("checkTyping").addEventListener("click", function() {
+                const originalText = `
+Once upon a time, in a land far, far away, there was a bustling town named Typington. The residents of Typington had a unique culture centered around the art of typing. Every year, they would host a grand tournament, where typists from all corners of the world would come to showcase their speed and accuracy.
+Young and old, everyone in the town practiced diligently, hoping to one day be crowned the Typing Champion. Legends spoke of the mythical "Speedster," a typist so fast that the keys would blaze with fire as they typed. However, it wasn't just about speed; precision was equally revered. A single typo could disqualify even the fastest typist.
+The heart of Typington was its grand library, which housed ancient manuscripts on typing techniques. Novices and masters alike would frequent the library, always in search of knowledge to refine their craft. The town believed that the power of words, when typed with skill and passion, could enchant, inspire, and change the world.
+    `.trim();
+
+                const userTypedText = document.getElementById("typingArea").value.trim();
+
+                const feedbackDiv = document.getElementById("feedback");
+
+                if (userTypedText === originalText) {
+                    feedbackDiv.textContent = "Typing is correct!";
+                    feedbackDiv.style.color = "green";
+                } else {
+                    feedbackDiv.textContent = "There are mistakes in your typing. See the discrepancies below:";
+                    feedbackDiv.style.color = "red";
+
+                    const differences = [];
+                    const originalWords = originalText.split(' ');
+                    const userTypedWords = userTypedText.split(' ');
+
+                    originalWords.forEach((word, index) => {
+                        if (userTypedWords[index] !== word) {
+                            differences.push(`Expected "${word}" but found "${userTypedWords[index] || '---'}"`);
+                        }
+                    });
+
+                    feedbackDiv.innerHTML += "<ul>" + differences.map(diff => `<li>${diff}</li>`).join('') + "</ul>";
+                }
+            });
+
+        </script>
+    </div>
+</body>
+
+</html>
