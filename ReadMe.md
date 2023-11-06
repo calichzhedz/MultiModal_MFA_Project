@@ -70,7 +70,17 @@ This project is a Flask-based web application for multi-modal authentication usi
    Open your preferred web browser and navigate to:
    
    http://127.0.0.1:5000/
-   
+
+## Python only (no frontend/webserver)
+
+1. choose 5 "valid" voice files and move the rest to a different directory
+
+2. update file path in "training_test" file to point where you are storing your voice files
+
+3. Run training_test.py after making changes and follow prompts in terminal
+
+4. after model is trained update the username_to_test function that is inside authenticate_test to whatever usernsme you wsnt to test then follow prompts.
+
 
 ## Usage:
 
