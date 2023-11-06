@@ -83,6 +83,6 @@ def authenticate_user(username):
 #         return False  # User is not authenticated
 
 # Assuming your modified authenticate_user function is defined above
-username_to_test = "CrazyJ"
+username_to_test = "USERNAME TO TEST HERE"
 is_authenticated = authenticate_user(username_to_test)
 print("User Authenticated" if is_authenticated else "User NOT Authenticated")
