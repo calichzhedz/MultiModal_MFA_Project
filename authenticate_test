@@ -1,0 +1,88 @@
+import pickle
+import numpy as np
+from Utils import extract_mfcc, record_voice, record_typing, load_model
+def authenticate_user(username):
+    # Load the trained models for the specific user
+    voice_model_filename = f'voice_model_{username}.pkl'
+    typing_model_filename = f'typing_model_{username}.pkl'
+    
+    voice_clf = load_model(voice_model_filename)
+    typing_clf = load_model(typing_model_filename)
+    
+    # Record the user's voice
+    voice_test_filename = f'voice_test_{username}.wav'
+    record_voice(voice_test_filename, duration=5, sr=22050, is_training=False)  # Set is_training to False for testing
+    
+    # Extract features from voice
+    voice_features = extract_mfcc(voice_test_filename).tolist()
+    
+    # # Predict with the voice classifier
+    # voice_prediction = voice_clf.predict([voice_features])
+    # voice_confidence = voice_clf.decision_function([voice_features])
+    
+    # Record the user's typing
+    typing_speed = record_typing()
+
+    # Predict with the voice classifier
+    voice_prediction = voice_clf.predict([voice_features])
+    voice_confidence = voice_clf.decision_function([voice_features])
+    
+    # Predict with the typing classifier
+    typing_prediction = typing_clf.predict([[typing_speed]])
+    typing_confidence = typing_clf.decision_function([[typing_speed]])
+    
+    # Set weights for each classifier (you may adjust these)
+    voice_weight = 0.7
+    typing_weight = 0.3
+    
+      # Predict with the voice classifier
+    voice_prediction = voice_clf.predict([voice_features])
+    voice_confidence = abs(voice_clf.decision_function([voice_features])[0])  # Using absolute value for confidence
+    
+    # Predict with the typing classifier
+    typing_prediction = typing_clf.predict([[typing_speed]])
+    typing_confidence = abs(typing_clf.decision_function([[typing_speed]])[0])  # Using absolute value for confidence
+    
+    # Set weights for each classifier (you may adjust these)
+    voice_weight = 0.7
+    typing_weight = 0.3
+    
+    # Calculate the weighted decision score
+    decision_score = voice_weight * voice_confidence + typing_weight * typing_confidence
+    
+    # Set a threshold for the decision score (you may adjust this)
+    decision_threshold = 0.5  # Adjust based on your system's performance and desired security level
+    
+
+    print(decision_score)
+    print("Voice: ", voice_confidence)
+    print("Typing: ", typing_confidence)
+
+    # Make a decision based on the decision score
+    if decision_score > decision_threshold:
+        return True  # User is authenticated
+    else:
+        return False  # User is not authenticated
+    
+#     # Predict with the typing classifier
+#     typing_prediction = typing_clf.predict([[typing_speed]])
+#     typing_confidence = typing_clf.decision_function([[typing_speed]])
+    
+#     # Set a threshold for confidence levels (you may adjust these)
+#     voice_confidence_threshold = 0.1
+#     typing_confidence_threshold = 0.1
+#     print("Typing values: ", typing_confidence, typing_prediction)
+#     print("Voice values: ", voice_confidence, voice_prediction)
+    
+#     # Make a decision based on the confidence levels
+#     if (voice_prediction == 1 and abs(voice_confidence) >
+#      voice_confidence_threshold) and \
+#        (typing_prediction == 1 and abs(typing_confidence) > typing_confidence_threshold):
+#         return True  # User is authenticated
+#     else:
+#         return False  # User is not authenticated
+
+# Assuming your modified authenticate_user function is defined above
+username_to_test = "CrazyJ"
+is_authenticated = authenticate_user(username_to_test)
+print("User Authenticated" if is_authenticated else "User NOT Authenticated")
